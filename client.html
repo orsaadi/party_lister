@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>WebSocket Client</title>
+    <link
+      rel="stylesheet"
+      href="styles.css"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="title">Welcome To Local Vibe!</h1>
+      <p class="about">
+        A Place Where You Can Share Local Events And See Local Events From
+        Around The World!
+      </p>
+      <p
+        id="clientCount"
+        class="clientCount"
+      >
+        Clients connected: 0
+      </p>
+
+      <div class="addEventDiv">
+        <h2 class="eventTitle">
+          Add An Event
+          <hr />
+        </h2>
+        <input
+          type="text"
+          class="NameEventInput"
+          id="NameEventInput"
+          placeholder="Name Of Event"
+        />
+        <input
+          type="text"
+          class="DescriptionEventInput"
+          id="DescriptionEventInput"
+          placeholder="Describe The Event"
+        />
+        <button class="attachImage">Attach Image (Optional)</button>
+        <button
+          class="uploadButton"
+          id="uploadButton"
+        >
+          Upload
+        </button>
+      </div>
+      <div class="eventsDiv"></div>
+    </div>
+    <script>
+      const socket = new WebSocket('ws://localhost:8080');
+      const uploadButton = document.getElementById('uploadButton');
+
+      uploadButton.onclick = () => {
+        const nameOfEvent = document.getElementById('NameEventInput').value;
+        const descriptionOfEvent = document.getElementById(
+          'DescriptionEventInput'
+        ).value;
+
+        socket.send(
+          JSON.stringify({
+            name: nameOfEvent,
+            description: descriptionOfEvent,
+          })
+        );
+
+        document.getElementById('NameEventInput').value = '';
+        document.getElementById('DescriptionEventInput').value = '';
+      };
+
+      socket.addEventListener('message', (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.clientCount !== undefined) {
+          document.getElementById(
+            'clientCount'
+          ).textContent = `Clients connected: ${data.clientCount}`;
+        } else if (data.name && data.description) {
+          const card = document.createElement('div');
+          card.className = 'event';
+
+          const eventTitle = document.createElement('h2');
+          eventTitle.textContent = data.name;
+          card.appendChild(eventTitle);
+
+          const hr = document.createElement('hr');
+          card.appendChild(hr);
+
+          const eventDescription = document.createElement('p');
+          eventDescription.className = 'description';
+          eventDescription.textContent = data.description;
+          card.appendChild(eventDescription);
+
+          const eventImage = document.createElement('img');
+          eventImage.className = 'eventImage';
+          eventImage.src =
+            'https://th.bing.com/th/id/OIP.2Y6DP8K6WxronDdKYbHUvAHaEE?w=310&h=180&c=7&r=0&o=5&pid=1.7';
+          card.appendChild(eventImage);
+
+          document.querySelector('.eventsDiv').appendChild(card);
+        }
+      });
+    </script>
+  </body>
+</html>
